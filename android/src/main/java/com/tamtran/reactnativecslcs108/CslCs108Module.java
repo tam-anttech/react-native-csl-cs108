@@ -1,4 +1,4 @@
-package com.reactnativecslcs108;
+package com.tamtran.reactnativecslcs108;
 
 import androidx.annotation.NonNull;
 import android.content.Context;
@@ -36,9 +36,10 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
     // -------------------------------------------------------------------------------------------
 
     @ReactMethod
-    public void createClient() {
+    public String createClient() {
         // mContext = this.context.getCurrentActivity();
         // mCs108Library4a = new Cs108Library4A(mContext, null);
-        Log.i("CslCs108Module", "createClient");
+        Log.i("From CslCs108Module =>>>", "init");
+        return "From CslCs108Module =>>>";
     }
 }

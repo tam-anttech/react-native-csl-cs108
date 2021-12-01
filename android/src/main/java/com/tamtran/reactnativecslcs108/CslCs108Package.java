@@ -1,4 +1,4 @@
-package com.reactnativecslcs108;
+package com.tamtran.reactnativecslcs108;
 
 import androidx.annotation.NonNull;
 

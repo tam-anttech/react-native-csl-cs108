@@ -18,6 +18,6 @@ const CslCs108 = NativeModules.CslCs108
     );
 
 export interface CsModuleInterface {
-  createClient(restoreIdentifierKey?: string): void;
+  createClient(): string;
 }
 export const Cs108Module: CsModuleInterface = CslCs108;

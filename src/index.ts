@@ -4,11 +4,10 @@ export class Cs108Manager {
   _id: string;
 
   constructor() {
-    Cs108Module.createClient();
     this._id = 'testID';
   }
 
   getId() {
-    return this._id;
+    return Cs108Module.createClient();
   }
 }
