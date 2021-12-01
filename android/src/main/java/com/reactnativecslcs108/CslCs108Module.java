@@ -11,7 +11,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 
-import com.csl.cs108library4a.Cs108Library4A;
+// import com.csl.cs108library4a.Cs108Library4A;
 
 @ReactModule(name = CslCs108Module.NAME)
 public class CslCs108Module extends ReactContextBaseJavaModule {
@@ -19,7 +19,7 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
     public static final String NAME = "CslCs108";
     private final ReactApplicationContext context;
 
-    public static Cs108Library4A mCs108Library4a;
+    // public static Cs108Library4A mCs108Library4a;
     public static Context mContext;
 
     public CslCs108Module(ReactApplicationContext reactContext) {
@@ -37,8 +37,8 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void createClient() {
-        mContext = this.context.getCurrentActivity();
-        mCs108Library4a = new Cs108Library4A(mContext, null);
+        // mContext = this.context.getCurrentActivity();
+        // mCs108Library4a = new Cs108Library4A(mContext, null);
         Log.i("CslCs108Module", "createClient");
     }
 }
