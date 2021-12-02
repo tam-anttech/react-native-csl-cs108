@@ -4,3 +4,5 @@ include ':app'
 
 include ':reactnativecslcs108'
 project(':reactnativecslcs108').projectDir = new File(rootProject.projectDir, '../../android')
+include ':cs108library4a'
+project(':cs108library4a').projectDir = new File(rootProject.projectDir, '../../android/cs108library4a')

@@ -11,8 +11,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 
-// import com.csl.cs108library4a.Cs108Library4A;
-
+import com.csl.cs108library4a.Cs108Library4A;
 @ReactModule(name = CslCs108Module.NAME)
 public class CslCs108Module extends ReactContextBaseJavaModule {
 
@@ -39,7 +38,7 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
     public String createClient() {
         // mContext = this.context.getCurrentActivity();
         // mCs108Library4a = new Cs108Library4A(mContext, null);
-        Log.i("From CslCs108Module =>>>", "init");
+        Log.i("CslCs108Module =>>>", "init");
         return "From CslCs108Module =>>>";
     }
 }
