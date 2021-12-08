@@ -33,21 +33,25 @@ const App = () => {
     screenLog('Scanning ...');
     bleManger.startDeviceScan((_, ble) => {
       if (ble) {
-        console.log(ble);
+        stopScan();
+        screenLog(` FOUND: ${ble.device.address} - ${ble.device.name}`, false);
+        bleManger.clearCache();
+        setTimeout(() => {
+          setConnectedDevice(ble);
+          connect(ble.device?.address);
+        }, 100);
 
-        if (
-          ble.device?.address.toLowerCase().includes('fc:a8:9a') ||
-          ble.device?.address.toLowerCase().includes('00:1b:66')
-        ) {
-          stopScan();
-          screenLog(` FOUND ${ble.device.address} - ${ble.device.name}`, false);
-          bleManger.clearCache();
-          setTimeout(() => {
-            connect(ble.device?.address);
-          }, 0);
-          return;
-        }
-        screenLog(` • ${ble.device.address} - ${ble.device.name}`, false);
+        // if (ble.device?.address.toLowerCase().includes('64:e7:d8')) {
+        //   stopScan();
+        //   screenLog(` FOUND ${ble.device.address} - ${ble.device.name}`, false);
+        //   bleManger.clearCache();
+        //   setTimeout(() => {
+        //     setConnectedDevice(ble);
+        //     connect(ble.device?.address);
+        //   }, 0);
+        //   return;
+        // }
+        // screenLog(` • ${ble.device.address} - ${ble.device.name}`, false);
       }
     });
   };
@@ -64,14 +68,32 @@ const App = () => {
     screenLog('CONNECTING ==> ' + address);
     bleManger.connectDevice(address, (err, deviceConnected) => {
       console.log('CONNECTED =>> ', { err }, { deviceConnected });
-      setConnectedDevice(deviceConnected);
-      screenLog('CONNECTED ==> ' + address + '\n');
+      if (!err) {
+        screenLog('CONNECTED ==> ' + address);
+        screenLog('Listening on ==> ' + address + '\n');
+        startReadData();
+      } else {
+        setConnectedDevice(null);
+        screenLog('CONNECT TO ' + address + ' FAIL');
+      }
     });
   };
 
   const disconnect = () => {
     setConnectedDevice(null);
+    bleManger.stopReadRFID();
     bleManger.disconnectDevice();
+  };
+
+  const startReadData = () => {
+    bleManger.startReadRFID((err, dataRfid) => {
+      if (err) return;
+      try {
+        screenLog('RFID read: ' + JSON.stringify(dataRfid));
+      } catch (error) {
+        screenLog('ERROR RFID ' + JSON.stringify(error));
+      }
+    });
   };
 
   const screenLog = (data: any, time = true) => {
@@ -84,11 +106,14 @@ const App = () => {
   };
 
   useEffect(() => {
+    bleManger.stopReadRFID();
     bleManger.stopDeviceScan();
     setScanning(false);
     screenLog('Started - No Devices Connected!');
     return () => {
-      stopScan();
+      setConnectedDevice(null);
+      bleManger.stopReadRFID();
+      bleManger.disconnectDevice();
     };
   }, []);
 
@@ -108,7 +133,9 @@ const App = () => {
               style={[styles.buttonText, connectedDevice && { color: '#0d0' }]}
             >
               {connectedDevice
-                ? 'Listening on =>> [ ' + connectedDevice + ' ]'
+                ? 'Listening on =>> ' +
+                  (connectedDevice?.device?.name ??
+                    connectedDevice?.device?.address)
                 : '[ NO DEVICE CONNECTED ]'}
             </Text>
           </TouchableOpacity>
@@ -168,7 +195,7 @@ const styles = StyleSheet.create({
   tools: {
     width: '100%',
     backgroundColor: '#000',
-    paddingVertical: 10,
+    paddingBottom: 10,
   },
   row: {
     flexDirection: 'row',

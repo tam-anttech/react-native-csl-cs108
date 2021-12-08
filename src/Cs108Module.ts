@@ -23,20 +23,23 @@ const CslCs108 = NativeModules.CslCs108
     );
 
 export interface Cs108ModuleInterface {
-  addListener(): void;
-  removeListeners(): void;
-
   createClient(restoreIdentifierKey?: string): void;
 
-  stopDeviceScan(): void;
-
   startDeviceScan(): void;
+
+  stopDeviceScan(): void;
 
   getNewDeviceScanned(callback?: any): void;
 
   connectDevice(address: string, callback?: any): void;
 
   disconnectDevice(): void;
+
+  startOperation(): void;
+
+  abortOperation(): void;
+
+  getRfidData(callback?: any): void;
 
   ScanEvent: string;
 }

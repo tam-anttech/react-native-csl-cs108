@@ -86,10 +86,10 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
                 String json = mapper.writeValueAsString(cs108ScanData);
                 callback.invoke(json);
             } catch (Exception e) {
-                callback.invoke("ERROR_NULL");
+                callback.invoke("ERROR_GET_DEVICE_EXCEPTION");
             }
         } else {
-            callback.invoke("ERROR_NULL");
+            callback.invoke("ERROR_GET_DEVICE_NULL");
         }
     }
 
@@ -99,23 +99,40 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
         boolean connectFlag = mCs108Library4a.connect(readerDevice);
         if (connectFlag) {
             callback.invoke(readerDevice.getAddress());
-
-            // ObjectMapper mapper = new ObjectMapper();
-            // try {
-            // String json = mapper.writeValueAsString(readerDevice);
-            // callback.invoke(json);
-            // } catch (Exception e) {
-            // Log.i("readerDevice =>>> ", "Exception");
-            // callback.invoke("ERROR_CONNECT");
-            // }
         } else {
-            callback.invoke("ERROR_CONNECT");
+            callback.invoke("ERROR_CONNECT_FAIL");
         }
     }
 
     @ReactMethod
     public void disconnectDevice() {
         mCs108Library4a.disconnect(true);
+    }
+
+    @ReactMethod
+    public void startOperation() {
+        mCs108Library4a.startOperation(Cs108Library4A.OperationTypes.TAG_INVENTORY_COMPACT);
+    }
+
+    @ReactMethod
+    public void getRfidData(Callback callback) {
+        Cs108Connector.Rx000pkgData rx000pkgData = mCs108Library4a.onRFIDEvent();
+        if (rx000pkgData != null) {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                String json = mapper.writeValueAsString(rx000pkgData);
+                callback.invoke(json);
+            } catch (Exception e) {
+                callback.invoke("ERROR_RFID_EVENT_EXCEPTION");
+            }
+        } else {
+            callback.invoke("ERROR_RFID_EVENT_NULL");
+        }
+    }
+
+    @ReactMethod
+    public void abortOperation() {
+        mCs108Library4a.abortOperation();
     }
 
     private void sendEvent(@NonNull Event event, @Nullable Object params) {

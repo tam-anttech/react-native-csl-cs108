@@ -3,6 +3,7 @@ import { Cs108Module } from './Cs108Module';
 type ListerInterface = (error?: any, scannedDevice?: any) => void;
 export class Cs108Manager {
   _getDevicesTaskInterval: any;
+  _getRfidTaskInterval: any;
 
   _listDeviceScanned: any[];
 
@@ -52,6 +53,26 @@ export class Cs108Manager {
 
   disconnectDevice = () => {
     Cs108Module.disconnectDevice();
+  };
+
+  startReadRFID = (listener: ListerInterface) => {
+    Cs108Module.abortOperation();
+    this._getRfidTaskInterval = setInterval(() => {
+      Cs108Module.getRfidData((data: any) => {
+        if (!data.includes('ERROR')) {
+          const newData = JSON.parse(data);
+          listener(null, newData);
+        } else {
+          listener(`[ERROR_READ_RFID_NULL]`, null);
+        }
+      });
+    }, 1000);
+    Cs108Module.startOperation();
+  };
+
+  stopReadRFID = () => {
+    Cs108Module.abortOperation();
+    clearInterval(this._getRfidTaskInterval);
   };
 
   clearCache = () => {
