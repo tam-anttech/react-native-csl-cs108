@@ -5,20 +5,41 @@ import android.content.Context;
 import android.app.Activity;
 import android.util.Log;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.module.annotations.ReactModule;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.csl.cs108library4a.Cs108Library4A;
+import com.csl.cs108library4a.Cs108Connector;
+import com.csl.cs108library4a.ReaderDevice;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 @ReactModule(name = CslCs108Module.NAME)
 public class CslCs108Module extends ReactContextBaseJavaModule {
 
     public static final String NAME = "CslCs108";
     private final ReactApplicationContext context;
 
-    // public static Cs108Library4A mCs108Library4a;
+    public static Cs108Library4A mCs108Library4a;
+    private ArrayList<Cs108Connector.Cs108ScanData> mScanResultList = new ArrayList<>();
     public static Context mContext;
 
     public CslCs108Module(ReactApplicationContext reactContext) {
@@ -32,13 +53,75 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
         return NAME;
     }
 
+    @Override
+    public Map<String, Object> getConstants() {
+        final Map<String, Object> constants = new HashMap<>();
+        constants.put("DEFAULT_EVENT_NAME", "New Event");
+        return constants;
+    }
     // -------------------------------------------------------------------------------------------
 
     @ReactMethod
-    public String createClient() {
-        // mContext = this.context.getCurrentActivity();
-        // mCs108Library4a = new Cs108Library4A(mContext, null);
-        Log.i("CslCs108Module =>>>", "init");
-        return "From CslCs108Module =>>>";
+    public void createClient() {
+        mContext = this.context.getCurrentActivity();
+        mCs108Library4a = new Cs108Library4A(mContext, null);
     }
+
+    @ReactMethod
+    public void startDeviceScan() {
+        mCs108Library4a.scanLeDevice(true);
+    }
+
+    @ReactMethod
+    public void stopDeviceScan() {
+        mCs108Library4a.scanLeDevice(false);
+    }
+
+    @ReactMethod
+    public void getNewDeviceScanned(Callback callback) {
+        Cs108Connector.Cs108ScanData cs108ScanData = mCs108Library4a.getNewDeviceScanned();
+        if (cs108ScanData != null) {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                String json = mapper.writeValueAsString(cs108ScanData);
+                callback.invoke(json);
+            } catch (Exception e) {
+                callback.invoke("ERROR_NULL");
+            }
+        } else {
+            callback.invoke("ERROR_NULL");
+        }
+    }
+
+    @ReactMethod
+    public void connectDevice(String address, Callback callback) {
+        ReaderDevice readerDevice = new ReaderDevice(null, address, false, "", 1, 0);
+        boolean connectFlag = mCs108Library4a.connect(readerDevice);
+        if (connectFlag) {
+            callback.invoke(readerDevice.getAddress());
+
+            // ObjectMapper mapper = new ObjectMapper();
+            // try {
+            // String json = mapper.writeValueAsString(readerDevice);
+            // callback.invoke(json);
+            // } catch (Exception e) {
+            // Log.i("readerDevice =>>> ", "Exception");
+            // callback.invoke("ERROR_CONNECT");
+            // }
+        } else {
+            callback.invoke("ERROR_CONNECT");
+        }
+    }
+
+    @ReactMethod
+    public void disconnectDevice() {
+        mCs108Library4a.disconnect(true);
+    }
+
+    private void sendEvent(@NonNull Event event, @Nullable Object params) {
+        getReactApplicationContext()
+                .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                .emit(event.name, params);
+    }
+
 }
