@@ -12,13 +12,15 @@ export class Cs108Manager {
     this._listDeviceScanned = [];
   }
 
+  getListDeviceScanned = () => this._listDeviceScanned;
+
   stopDeviceScan = () => {
     clearInterval(this._getDevicesTaskInterval);
-    this.clearCache();
     Cs108Module.stopDeviceScan();
   };
 
   startDeviceScan = (listener: ListerInterface) => {
+    this._listDeviceScanned.length = 0;
     Cs108Module.stopDeviceScan();
     this._getDevicesTaskInterval = setInterval(() => {
       Cs108Module.getNewDeviceScanned((data: any) => {

@@ -1,9 +1,11 @@
 package com.tamtran.reactnativecslcs108;
 
+import android.bluetooth.BluetoothDevice;
 import androidx.annotation.NonNull;
 import android.content.Context;
 import android.app.Activity;
 import android.util.Log;
+// import org.json.simple.JSONObject;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -16,6 +18,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.module.annotations.ReactModule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import com.csl.cs108library4a.Cs108Library4A;
 import com.csl.cs108library4a.Cs108Connector;
@@ -82,11 +85,18 @@ public class CslCs108Module extends ReactContextBaseJavaModule {
         Cs108Connector.Cs108ScanData cs108ScanData = mCs108Library4a.getNewDeviceScanned();
         if (cs108ScanData != null) {
             ObjectMapper mapper = new ObjectMapper();
+
             try {
-                String json = mapper.writeValueAsString(cs108ScanData);
-                callback.invoke(json);
+                BluetoothDevice tempDevice = cs108ScanData.getDevice();
+                ObjectNode rootNode = mapper.createObjectNode();
+                ObjectNode childNode1 = mapper.createObjectNode();
+                childNode1.put("name", tempDevice.getName());
+                childNode1.put("address", tempDevice.getAddress());
+                rootNode.set("device", childNode1);
+
+                callback.invoke(mapper.writeValueAsString(rootNode));
             } catch (Exception e) {
-                callback.invoke("ERROR_GET_DEVICE_EXCEPTION");
+                callback.invoke("ERROR_GET_DEVICE_EXCEPTION " + e.toString());
             }
         } else {
             callback.invoke("ERROR_GET_DEVICE_NULL");

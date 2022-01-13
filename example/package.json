@@ -6,7 +6,8 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "start": "react-native start"
+    "start": "react-native start",
+    "build-android": "cd android && ./gradlew assembleRelease && open app/build/outputs/apk/release"
   },
   "dependencies": {
     "react": "16.13.1",

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { Cs108Manager } from 'react-native-csl-cs108';
 
@@ -25,21 +26,25 @@ const App = () => {
   const [log, setLog] = useState(getTime() + 'Starting ...\n');
   const [scanning, setScanning] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<any | null>(null);
+  const [list, setList] = useState<any | null>(null);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
 
   const refScroll = useRef<ScrollView>(null);
 
   const startScan = () => {
+    setShowPopup(false);
     setScanning(true);
+    setList(null);
     screenLog('Scanning ...');
     bleManger.startDeviceScan((_, ble) => {
       if (ble) {
-        stopScan();
-        screenLog(` FOUND: ${ble.device.address} - ${ble.device.name}`, false);
-        bleManger.clearCache();
-        setTimeout(() => {
-          setConnectedDevice(ble);
-          connect(ble.device?.address);
-        }, 100);
+        // stopScan();
+        // screenLog(` FOUND: ${ble.device.address} - ${ble.device.name}`, false);
+        // bleManger.clearCache();
+        // setTimeout(() => {
+        //   setConnectedDevice(ble);
+        //   connect(ble.device?.address);
+        // }, 100);
 
         // if (ble.device?.address.toLowerCase().includes('64:e7:d8')) {
         //   stopScan();
@@ -51,7 +56,7 @@ const App = () => {
         //   }, 0);
         //   return;
         // }
-        // screenLog(` • ${ble.device.address} - ${ble.device.name}`, false);
+        screenLog(` • ${ble.device.address} - ${ble.device.name}`, false);
       }
     });
   };
@@ -64,25 +69,32 @@ const App = () => {
     bleManger.stopDeviceScan();
   };
 
-  const connect = (address: string) => {
-    screenLog('CONNECTING ==> ' + address);
-    bleManger.connectDevice(address, (err, deviceConnected) => {
-      console.log('CONNECTED =>> ', { err }, { deviceConnected });
+  const connect = (ble: any) => {
+    screenLog('CONNECTING ==> ' + ble.address);
+    bleManger.connectDevice(ble.address, (err, _) => {
       if (!err) {
-        screenLog('CONNECTED ==> ' + address);
-        screenLog('Listening on ==> ' + address + '\n');
+        screenLog('CONNECTED ==> ' + ble.address);
+        screenLog('Listening on ==> ' + ble.address + '\n');
+        setShowPopup(false);
+        setConnectedDevice(ble);
         startReadData();
+        refScroll.current?.scrollToEnd({ animated: false });
       } else {
         setConnectedDevice(null);
-        screenLog('CONNECT TO ' + address + ' FAIL');
+        screenLog('CONNECT TO ' + ble.address + ' FAIL');
       }
     });
   };
 
-  const disconnect = () => {
-    setConnectedDevice(null);
-    bleManger.stopReadRFID();
-    bleManger.disconnectDevice();
+  const toggleConnect = () => {
+    if (connectedDevice) {
+      setConnectedDevice(false);
+      bleManger.stopReadRFID();
+      bleManger.disconnectDevice();
+    } else {
+      setList(bleManger.getListDeviceScanned());
+    }
+    setShowPopup((prev) => !prev);
   };
 
   const startReadData = () => {
@@ -117,26 +129,48 @@ const App = () => {
     };
   }, []);
 
+  const renderItem = ({ item, index }) => {
+    return (
+      <TouchableOpacity
+        style={{ backgroundColor: '#ccc', margin: 7, padding: 5 }}
+        onPress={() => connect(item.device)}
+      >
+        <Text>
+          {index + 1 + '/ ' + item.device?.address + ' - ' + item.device?.name}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={refScroll}
-        style={styles.wrapText}
-        contentContainerStyle={{ paddingBottom: 5 }}
-      >
-        <Text style={styles.text}>{log || '_'}</Text>
-      </ScrollView>
+      {!showPopup ? (
+        <ScrollView
+          ref={refScroll}
+          style={styles.wrapText}
+          contentContainerStyle={{ paddingBottom: 5 }}
+        >
+          <Text style={styles.text}>{log || '_'}</Text>
+        </ScrollView>
+      ) : (
+        <FlatList
+          style={{ width: '100%' }}
+          data={list}
+          extraData={list}
+          renderItem={renderItem}
+          keyExtractor={(item) => item?.address}
+        />
+      )}
       <View style={styles.tools}>
         <View style={styles.row}>
-          <TouchableOpacity style={styles.button} onPress={disconnect}>
+          <TouchableOpacity style={styles.button} onPress={toggleConnect}>
             <Text
               style={[styles.buttonText, connectedDevice && { color: '#0d0' }]}
             >
               {connectedDevice
                 ? 'Listening on =>> ' +
-                  (connectedDevice?.device?.name ??
-                    connectedDevice?.device?.address)
-                : '[ NO DEVICE CONNECTED ]'}
+                  (connectedDevice?.name ?? connectedDevice?.address)
+                : '[ NO DEVICE - press to connect! ]'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -221,6 +255,10 @@ const styles = StyleSheet.create({
   disabled: {
     backgroundColor: '#00994d',
   },
+  popup: {
+    backgroundColor: '#ccc',
+  },
 });
 
 // 00:1B:66:E0:D6:BE
+// D7:04:A6:47:90
